@@ -19,6 +19,16 @@ indexBoundSubstGen maxIndex = do
   entries <- traverse (\i -> (i,) <$> maxIndexBoundTyGen) substVarIndices
   pure $ Substitution $ IntMap.fromList entries
 
+{- | 'indexBoundSubstGen maxIndex' is a generator for 'Substitution's involving type
+ - variables with indices i in [1..size] mapping to themselves (TypeVar i)
+-}
+indexBoundInertSubstGen :: Int -> Gen Substitution
+indexBoundInertSubstGen maxIndex =
+  Substitution
+    . IntMap.fromList
+    . fmap (\i -> (i, TypeVar i))
+    <$> sublistOf [1 .. maxIndex]
+
 {- | 'indexBoundTyGen maxIndex' is a generator for 'LCType's involving type variables with indices
 in [1..size]
 -}
@@ -75,10 +85,23 @@ substitutionCompositionSpec = do
     "running a composed Substitution is equivalent to running the Substitutions one after another"
     runComposition
 
+inertSubstitution :: Property
+inertSubstitution = forAll arbitrary $ \(NonNegative i) ->
+  forAll (indexBoundInertSubstGen i) $ \subst ->
+    forAll (indexBoundTyGen i) $ \ty ->
+      runSubstitution subst ty == runSubstitution mempty ty
+
+inertSubstitutionSpec :: Spec
+inertSubstitutionSpec = do
+  prop
+    "a Substitution that only maps indices to their own TypeVars is inert"
+    inertSubstitution
+
 substitutionPropertiesSpec :: Spec
 substitutionPropertiesSpec = do
   describe "Monoid laws" substitutionMonoidLawsSpec
   describe "Composition" substitutionCompositionSpec
+  describe "Inert" inertSubstitutionSpec
 
 substitutionSpec :: Spec
 substitutionSpec = substitutionPropertiesSpec
