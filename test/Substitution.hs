@@ -9,18 +9,15 @@ import Data.IntMap.Strict qualified as IntMap
 import LambdaCalculus.Infer.Substitution (Substitution (..), runSubstitution)
 import LambdaCalculus.Types.LCType (LCType (..))
 
-{- | 'sizeBoundSubstGen size' is a generator for 'Substitution's involving type variables with
+{- | 'indexBoundSubstGen maxIndex' is a generator for 'Substitution's involving type variables with
 indices in [1..size]
 -}
-sizeBoundSubstGen :: Int -> Gen Substitution
-sizeBoundSubstGen size =
-  Substitution . IntMap.fromList
-    <$> fmap
-      (zip [1 .. size])
-      ( sequenceA $
-          replicate size $
-            indexBoundTyGen size
-      )
+indexBoundSubstGen :: Int -> Gen Substitution
+indexBoundSubstGen maxIndex = do
+  let maxIndexBoundTyGen = indexBoundTyGen maxIndex
+  substVarIndices <- sublistOf [1 .. maxIndex]
+  entries <- traverse (\i -> (i,) <$> maxIndexBoundTyGen) substVarIndices
+  pure $ Substitution $ IntMap.fromList entries
 
 {- | 'indexBoundTyGen maxIndex' is a generator for 'LCType's involving type variables with indices
 in [1..size]
@@ -37,20 +34,20 @@ indexBoundTyGen maxIndex = go
 
 memptyLeftIdentity :: Property
 memptyLeftIdentity = forAll arbitrary $ \(NonNegative i) ->
-  forAll (sizeBoundSubstGen i) $ \subst ->
+  forAll (indexBoundSubstGen i) $ \subst ->
     forAll (indexBoundTyGen i) $ \ty ->
       runSubstitution (mempty <> subst) ty == runSubstitution subst ty
 
 memptyRightIdentity :: Property
 memptyRightIdentity = forAll arbitrary $ \(NonNegative i) ->
-  forAll (sizeBoundSubstGen i) $ \subst ->
+  forAll (indexBoundSubstGen i) $ \subst ->
     forAll (indexBoundTyGen i) $ \ty ->
       runSubstitution (subst <> mempty) ty == runSubstitution subst ty
 
 mappendAssociative :: Property
 mappendAssociative = forAll arbitrary $ \(NonNegative i) ->
   let
-    iBoundSubstGen = sizeBoundSubstGen i
+    iBoundSubstGen = indexBoundSubstGen i
    in
     forAll ((,,) <$> iBoundSubstGen <*> iBoundSubstGen <*> iBoundSubstGen) $ \(subst1, subst2, subst3) ->
       forAll (indexBoundTyGen i) $ \ty ->
@@ -65,7 +62,7 @@ substitutionMonoidLawsSpec = do
 runComposition :: Property
 runComposition = forAll arbitrary $ \(NonNegative i) ->
   let
-    iBoundSubstGen = sizeBoundSubstGen i
+    iBoundSubstGen = indexBoundSubstGen i
    in
     forAll ((,) <$> iBoundSubstGen <*> iBoundSubstGen) $ \(subst1, subst2) ->
       forAll (indexBoundTyGen i) $
