@@ -4,4 +4,5 @@ import LambdaCalculus.Types
 
 main :: IO ()
 main = do
-  print $ Abs "x" $ ArithBinOp Add (ArithBinOp Mul (Var "x") (Int 1)) (App (Abs "x" (Var "x")) (Int 2))
+  print $ Abs "f" $ ArithBinOp Add (ArithBinOp Mul (App (Var "f") (Int 1)) (Int 2)) (App (Abs "x" (Var "x")) (Int 3))
+  print $ FunctionType (FunctionType IntType IntType) IntType
