@@ -2,15 +2,15 @@ module LambdaCalculus.Infer (
   inferType,
 ) where
 
-import Control.Monad.Except
-import Control.Monad.State
-import Data.Foldable
+import Control.Monad.Except (ExceptT, liftEither, runExceptT)
+import Control.Monad.State (MonadState (..), State, evalState, modify')
 import Data.IntMap.Strict (IntMap)
 import Data.IntMap.Strict qualified as IntMap
 import Data.Map.Strict (Map)
 import Data.Map.Strict qualified as Map
 
-import LambdaCalculus.Types
+import LambdaCalculus.Types.LCExpr (LCExpr (..))
+import LambdaCalculus.Types.LCType (LCType (..))
 
 newtype Substitution = Substitution {mapping :: IntMap LCType}
 
@@ -76,7 +76,7 @@ inferType expr = fst <$> evalState (runExceptT (go Map.empty expr)) 0
     let resultTy = runSubstitution unifySubst resultTypeVar
     pure
       ( resultTy
-      , foldl' (<>) unifySubst [e2Subst, e1Subst]
+      , unifySubst <> e2Subst <> e1Subst
       )
   go _ (Int _) = pure (IntType, mempty)
   go typeCtx (ArithBinOp _ e1 e2) = do
