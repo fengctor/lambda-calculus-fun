@@ -63,6 +63,7 @@ library
                     , LambdaCalculus.Types.LCExpr
                     , LambdaCalculus.Types.LCType
                     , LambdaCalculus.Infer
+                    , LambdaCalculus.Infer.Substitution
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -113,7 +114,7 @@ test-suite lambda-calculus-fun-test
     default-language: GHC2021
 
     -- Modules included in this executable, other than Main.
-    -- other-modules:
+    other-modules:    Substitution
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
@@ -130,4 +131,7 @@ test-suite lambda-calculus-fun-test
     -- Test dependencies.
     build-depends:
         base ^>=4.17.2.1,
-        lambda-calculus-fun
+        containers ^>=0.8,
+        hspec,
+        QuickCheck,
+        lambda-calculus-fun,

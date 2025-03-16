@@ -1,4 +1,8 @@
 module Main (main) where
 
+import Test.Hspec
+
+import Substitution
+
 main :: IO ()
-main = putStrLn "Test suite not yet implemented."
+main = hspec $ describe "Substitution" substitutionSpec
