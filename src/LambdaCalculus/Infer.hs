@@ -11,22 +11,22 @@ import LambdaCalculus.Infer.Substitution
 import LambdaCalculus.Types.LCExpr (LCExpr (..))
 import LambdaCalculus.Types.LCType (LCType (..))
 
-data InferError
+data InferError l
   = InfiniteType
   | UnificationFailure
-  | UnboundVariable String
+  | UnboundVariable l
   deriving (Show)
 
-getFreshVarTypeIndex :: ExceptT InferError (State Int) Int
+getFreshVarTypeIndex :: ExceptT (InferError l) (State Int) Int
 getFreshVarTypeIndex = do
   i <- get
   modify' (+ 1)
   pure i
 
-inferType :: LCExpr -> Either InferError LCType
+inferType :: forall l. (Ord l) => LCExpr l -> Either (InferError l) LCType
 inferType expr = fst <$> evalState (runExceptT (go Map.empty expr)) 0
  where
-  go :: Map String LCType -> LCExpr -> ExceptT InferError (State Int) (LCType, Substitution)
+  go :: Map l LCType -> LCExpr l -> ExceptT (InferError l) (State Int) (LCType, Substitution)
   go typeCtx (Var v) = liftEither $ case Map.lookup v typeCtx of
     Nothing -> Left $ UnboundVariable v
     Just t -> Right (t, mempty)
@@ -60,14 +60,14 @@ inferType expr = fst <$> evalState (runExceptT (go Map.empty expr)) 0
     let e2Subst = e2UnifyIntSubst <> e2InitialSubst
     pure (IntType, e2Subst <> e1Subst)
 
-occursCheck :: Int -> LCType -> Either InferError ()
+occursCheck :: Int -> LCType -> Either (InferError l) ()
 occursCheck i (TypeVar i')
   | i == i' = Left InfiniteType
   | otherwise = Right ()
 occursCheck i (FunctionType t1 t2) = occursCheck i t1 *> occursCheck i t2
 occursCheck _ IntType = Right ()
 
-tryUnify :: LCType -> LCType -> Either InferError Substitution
+tryUnify :: LCType -> LCType -> Either (InferError l) Substitution
 tryUnify (TypeVar i) t = singletonSubstitution i t <$ occursCheck i t
 tryUnify t (TypeVar i) = singletonSubstitution i t <$ occursCheck i t
 tryUnify IntType IntType = Right mempty

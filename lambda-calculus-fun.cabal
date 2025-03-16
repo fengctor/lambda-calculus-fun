@@ -64,6 +64,7 @@ library
                     , LambdaCalculus.Types.LCType
                     , LambdaCalculus.Infer
                     , LambdaCalculus.Infer.Substitution
+                    , LambdaCalculus.Reduce
 
     -- Modules included in this library but not exported.
     -- other-modules:
@@ -115,6 +116,7 @@ test-suite lambda-calculus-fun-test
 
     -- Modules included in this executable, other than Main.
     other-modules:    Substitution
+                    , Reduce
 
     -- LANGUAGE extensions used by modules in this package.
     -- other-extensions:
