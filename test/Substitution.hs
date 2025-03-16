@@ -62,9 +62,26 @@ substitutionMonoidLawsSpec = do
   prop "right identity" memptyRightIdentity
   prop "associative" mappendAssociative
 
+runComposition :: Property
+runComposition = forAll arbitrary $ \(NonNegative i) ->
+  let
+    iBoundSubstGen = sizeBoundSubstGen i
+   in
+    forAll ((,) <$> iBoundSubstGen <*> iBoundSubstGen) $ \(subst1, subst2) ->
+      forAll (indexBoundTyGen i) $
+        \ty ->
+          runSubstitution (subst2 <> subst1) ty == runSubstitution subst2 (runSubstitution subst1 ty)
+
+substitutionCompositionSpec :: Spec
+substitutionCompositionSpec = do
+  prop
+    "running a composed Substitution is equivalent to running the Substitutions one after another"
+    runComposition
+
 substitutionPropertiesSpec :: Spec
-substitutionPropertiesSpec =
+substitutionPropertiesSpec = do
   describe "Monoid laws" substitutionMonoidLawsSpec
+  describe "Composition" substitutionCompositionSpec
 
 substitutionSpec :: Spec
 substitutionSpec = substitutionPropertiesSpec

@@ -25,8 +25,7 @@ instance Semigroup Substitution where
   -- The latter is needed since `i` being missing from `subst1` is equivalent to it mapping to `TypeVar i`.
   subst2 <> subst1 =
     Substitution $
-      IntMap.union (mapping subst2) $
-        fmap (runSubstitution subst2) (mapping subst1)
+      IntMap.union (runSubstitution subst2 <$> mapping subst1) (mapping subst2)
 
 instance Monoid Substitution where
   mempty = Substitution IntMap.empty
