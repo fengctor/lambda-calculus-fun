@@ -29,5 +29,5 @@ repl = do
           case relabelToUniqueBinders expr of
             Nothing -> putStrLn "Error relabeling binders (this shouldn't happen after type inference)"
             Just relabeledExpr -> do
-              print $ betaReduceUniqueBinders relabeledExpr
+              print $ Pretty $ betaReduceUniqueBinders relabeledExpr
   repl
