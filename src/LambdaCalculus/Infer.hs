@@ -68,8 +68,9 @@ occursCheck i (FunctionType t1 t2) = occursCheck i t1 *> occursCheck i t2
 occursCheck _ IntType = Right ()
 
 tryUnify :: LCType -> LCType -> Either (InferError l) Substitution
-tryUnify (TypeVar i) t = singletonSubstitution i t <$ occursCheck i t
+tryUnify (TypeVar i1) (TypeVar i2) | i1 == i2 = Right mempty
 tryUnify t (TypeVar i) = singletonSubstitution i t <$ occursCheck i t
+tryUnify (TypeVar i) t = singletonSubstitution i t <$ occursCheck i t
 tryUnify IntType IntType = Right mempty
 tryUnify (FunctionType ty1 ty2) (FunctionType ty3 ty4) = do
   subst1 <- tryUnify ty1 ty3
